@@ -1,18 +1,28 @@
-/* globals.css - Version sans @tailwind */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Focus orange sur tous les inputs */
+input:focus,
+textarea:focus,
+select:focus {
+  outline: none !important;
+  border-color: #d85940 !important;
+  box-shadow: 0 0 0 3px rgba(216, 89, 64, 0.1) !important;
+}
+
+input:hover,
+textarea:hover,
+select:hover {
+  border-color: #e57560;
+}
+
+/* Couleurs texte */
 body {
   color: #1f2937;
-  background: #f9fafb;
-  margin: 0;
-  padding: 0;
-  font-family: 'Inter', system-ui, sans-serif;
 }
 
-input, 
-textarea, 
-select {
+input, textarea, select {
   color: #1f2937 !important;
-}
-
-* {
-  box-sizing: border-box;
+  transition: all 0.2s ease;
 }
