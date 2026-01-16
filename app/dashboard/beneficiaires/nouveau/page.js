@@ -2,6 +2,76 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 
+// ========== COMPOSANTS EXTERNES (hors du composant principal) ==========
+
+// Composant Section accordéon
+const Section = ({ id, title, icon, children, badge, isOpen, onToggle }) => (
+  <div className="border border-gray-200 rounded-lg overflow-hidden">
+    <button
+      type="button"
+      onClick={() => onToggle(id)}
+      className="w-full flex items-center justify-between px-4 py-3 bg-gray-50 hover:bg-gray-100 transition-colors"
+    >
+      <span className="flex items-center gap-2 font-medium text-gray-700">
+        <span>{icon}</span>
+        {title}
+        {badge && (
+          <span className="ml-2 px-2 py-0.5 text-xs bg-[#74ccc3] text-white rounded-full">
+            {badge}
+          </span>
+        )}
+      </span>
+      <svg
+        className={`w-5 h-5 text-gray-500 transition-transform ${isOpen ? 'rotate-180' : ''}`}
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke="currentColor"
+      >
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+      </svg>
+    </button>
+    {isOpen && (
+      <div className="p-4 bg-white">{children}</div>
+    )}
+  </div>
+);
+
+// Composant Info tooltip
+const InfoTooltip = ({ text }) => (
+  <div className="group relative inline-block ml-2">
+    <svg className="w-4 h-4 text-gray-400 hover:text-[#74ccc3] cursor-help" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+    </svg>
+    <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:block w-64 p-2 bg-gray-800 text-white text-xs rounded-lg shadow-lg z-10">
+      {text}
+      <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-gray-800"></div>
+    </div>
+  </div>
+);
+
+// Composant Tag
+const TagList = ({ items, field, onRemove, color = 'bg-[#a5fce8]' }) => (
+  <div className="flex flex-wrap gap-2 mt-2">
+    {items.map((item, index) => (
+      <span
+        key={index}
+        className={`inline-flex items-center gap-1 px-3 py-1 ${color} text-gray-700 rounded-full text-sm`}
+      >
+        {item}
+        <button
+          type="button"
+          onClick={() => onRemove(field, index)}
+          className="hover:text-red-600"
+        >
+          ×
+        </button>
+      </span>
+    ))}
+  </div>
+);
+
+// ========== COMPOSANT PRINCIPAL ==========
+
 export default function NouveauBeneficiairePage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
@@ -223,7 +293,7 @@ export default function NouveauBeneficiairePage() {
     const newBeneficiaire = {
       ...formData,
       id: Date.now().toString(),
-      coffre_pin_hash: formData.coffre_pin, // En prod: à hasher côté serveur
+      coffre_pin_hash: formData.coffre_pin,
       rgpd_consent_date: new Date().toISOString(),
       created_at: new Date().toISOString()
     };
@@ -238,72 +308,6 @@ export default function NouveauBeneficiairePage() {
       router.push('/dashboard/beneficiaires');
     }, 500);
   };
-
-  // Composant Section accordéon
-  const Section = ({ id, title, icon, children, badge }) => (
-    <div className="border border-gray-200 rounded-lg overflow-hidden">
-      <button
-        type="button"
-        onClick={() => toggleSection(id)}
-        className="w-full flex items-center justify-between px-4 py-3 bg-gray-50 hover:bg-gray-100 transition-colors"
-      >
-        <span className="flex items-center gap-2 font-medium text-gray-700">
-          <span>{icon}</span>
-          {title}
-          {badge && (
-            <span className="ml-2 px-2 py-0.5 text-xs bg-[#74ccc3] text-white rounded-full">
-              {badge}
-            </span>
-          )}
-        </span>
-        <svg
-          className={`w-5 h-5 text-gray-500 transition-transform ${openSections[id] ? 'rotate-180' : ''}`}
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-        >
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-        </svg>
-      </button>
-      {openSections[id] && (
-        <div className="p-4 bg-white">{children}</div>
-      )}
-    </div>
-  );
-
-  // Composant Info tooltip
-  const InfoTooltip = ({ text }) => (
-    <div className="group relative inline-block ml-2">
-      <svg className="w-4 h-4 text-gray-400 hover:text-[#74ccc3] cursor-help" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-      </svg>
-      <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:block w-64 p-2 bg-gray-800 text-white text-xs rounded-lg shadow-lg z-10">
-        {text}
-        <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-gray-800"></div>
-      </div>
-    </div>
-  );
-
-  // Composant Tag
-  const TagList = ({ items, field, onRemove, color = 'bg-[#a5fce8]' }) => (
-    <div className="flex flex-wrap gap-2 mt-2">
-      {items.map((item, index) => (
-        <span
-          key={index}
-          className={`inline-flex items-center gap-1 px-3 py-1 ${color} text-gray-700 rounded-full text-sm`}
-        >
-          {item}
-          <button
-            type="button"
-            onClick={() => onRemove(field, index)}
-            className="hover:text-red-600"
-          >
-            ×
-          </button>
-        </span>
-      ))}
-    </div>
-  );
 
   return (
     <>
@@ -375,7 +379,7 @@ export default function NouveauBeneficiairePage() {
           </div>
 
           {/* Section 1: État civil & Coordonnées */}
-          <Section id="civil" title="État civil & Coordonnées" icon="👤">
+          <Section id="civil" title="État civil & Coordonnées" icon="👤" isOpen={openSections.civil} onToggle={toggleSection}>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Civilité *</label>
@@ -540,7 +544,7 @@ export default function NouveauBeneficiairePage() {
           </Section>
 
           {/* Section 2: Problématique & Mode de vie */}
-          <Section id="problematique" title="Problématique & Mode de vie" icon="📝">
+          <Section id="problematique" title="Problématique & Mode de vie" icon="📝" isOpen={openSections.problematique} onToggle={toggleSection}>
             <div>
               <label className="flex items-center text-sm font-medium text-gray-700 mb-1">
                 Description de la situation
@@ -561,7 +565,7 @@ export default function NouveauBeneficiairePage() {
           </Section>
 
           {/* Section 3: Personne de confiance */}
-          <Section id="confiance" title="Personne de confiance" icon="👨‍👩‍👧">
+          <Section id="confiance" title="Personne de confiance" icon="👨‍👩‍👧" isOpen={openSections.confiance} onToggle={toggleSection}>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Nom complet</label>
@@ -618,7 +622,7 @@ export default function NouveauBeneficiairePage() {
           </Section>
 
           {/* Section 4: Administratif */}
-          <Section id="administratif" title="Administratif" icon="📋">
+          <Section id="administratif" title="Administratif" icon="📋" isOpen={openSections.administratif} onToggle={toggleSection}>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -710,7 +714,7 @@ export default function NouveauBeneficiairePage() {
           </Section>
 
           {/* Section 5: Médical */}
-          <Section id="medical" title="Informations médicales" icon="🏥" badge={formData.is_hospitalized ? 'Hospitalisé' : null}>
+          <Section id="medical" title="Informations médicales" icon="🏥" badge={formData.is_hospitalized ? 'Hospitalisé' : null} isOpen={openSections.medical} onToggle={toggleSection}>
             <div className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
@@ -868,7 +872,7 @@ export default function NouveauBeneficiairePage() {
           </Section>
 
           {/* Section 6: APA */}
-          <Section id="apa" title="APA (Allocation Personnalisée d'Autonomie)" icon="💶">
+          <Section id="apa" title="APA (Allocation Personnalisée d'Autonomie)" icon="💶" isOpen={openSections.apa} onToggle={toggleSection}>
             <div className="space-y-4">
               <label className="flex items-center gap-3 cursor-pointer">
                 <input
@@ -917,7 +921,7 @@ export default function NouveauBeneficiairePage() {
           </Section>
 
           {/* Section 7: Accès domicile */}
-          <Section id="acces" title="Accès au domicile" icon="🔑">
+          <Section id="acces" title="Accès au domicile" icon="🔑" isOpen={openSections.acces} onToggle={toggleSection}>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -949,7 +953,7 @@ export default function NouveauBeneficiairePage() {
           </Section>
 
           {/* Section 8: Liens Drive & Options */}
-          <Section id="liens" title="Liens Drive & Options" icon="📁">
+          <Section id="liens" title="Liens Drive & Options" icon="📁" isOpen={openSections.liens} onToggle={toggleSection}>
             <div className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
@@ -1008,7 +1012,7 @@ export default function NouveauBeneficiairePage() {
           </Section>
 
           {/* Section 9: Coffre-fort */}
-          <Section id="coffre" title="Coffre-fort numérique" icon="🔐" badge={formData.coffre_fort.length > 0 ? `${formData.coffre_fort.length} entrée(s)` : null}>
+          <Section id="coffre" title="Coffre-fort numérique" icon="🔐" badge={formData.coffre_fort.length > 0 ? `${formData.coffre_fort.length} entrée(s)` : null} isOpen={openSections.coffre} onToggle={toggleSection}>
             <div className="space-y-4">
               <div className="bg-gray-50 border border-gray-200 rounded-lg p-3 flex items-start gap-3">
                 <svg className="w-5 h-5 text-gray-500 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">

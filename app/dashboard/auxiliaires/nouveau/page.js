@@ -2,6 +2,74 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 
+// ========== COMPOSANTS EXTERNES (hors du composant principal) ==========
+
+// Composant Section accordéon
+const Section = ({ id, title, icon, children, isOpen, onToggle }) => (
+  <div className="border border-gray-200 rounded-lg overflow-hidden">
+    <button
+      type="button"
+      onClick={() => onToggle(id)}
+      className="w-full flex items-center justify-between px-4 py-3 bg-gray-50 hover:bg-gray-100 transition-colors"
+    >
+      <span className="flex items-center gap-2 font-medium text-gray-700">
+        <span>{icon}</span>
+        {title}
+      </span>
+      <svg
+        className={`w-5 h-5 text-gray-500 transition-transform ${isOpen ? 'rotate-180' : ''}`}
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke="currentColor"
+      >
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+      </svg>
+    </button>
+    {isOpen && (
+      <div className="p-4 bg-white">{children}</div>
+    )}
+  </div>
+);
+
+// Composant Tag pour les listes
+const TagList = ({ items, field, onRemove }) => (
+  <div className="flex flex-wrap gap-2 mt-2">
+    {items.map((item, index) => (
+      <span
+        key={index}
+        className="inline-flex items-center gap-1 px-3 py-1 bg-[#a5fce8] text-gray-700 rounded-full text-sm"
+      >
+        {item}
+        <button
+          type="button"
+          onClick={() => onRemove(field, index)}
+          className="hover:text-red-600"
+        >
+          ×
+        </button>
+      </span>
+    ))}
+  </div>
+);
+
+// Liste des compétences prédéfinies
+const COMPETENCES_LIST = [
+  'Entretien de l\'environnement',
+  'Toilette',
+  'Aide au change',
+  'Transferts',
+  'Courses',
+  'Week-end',
+  'Nuit',
+  'Accompagnement aux RDV',
+  'Sorties',
+  'Voiture',
+  'Préparation repas',
+  'Autonomie gestion de planning'
+];
+
+// ========== COMPOSANT PRINCIPAL ==========
+
 export default function NouvelAVSPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
@@ -39,7 +107,7 @@ export default function NouvelAVSPage() {
     // Mobilité
     is_motorisee: false,
     lieux_intervention: [],
-    // Compétences
+    // Compétences (maintenant un tableau de compétences cochées)
     competences: [],
     notes_competences: '',
     formations: [],
@@ -62,7 +130,6 @@ export default function NouvelAVSPage() {
 
   // Champs temporaires pour les listes
   const [newLieu, setNewLieu] = useState('');
-  const [newCompetence, setNewCompetence] = useState('');
   const [newFormation, setNewFormation] = useState('');
   const [newDiplome, setNewDiplome] = useState('');
   const [newQualite, setNewQualite] = useState('');
@@ -77,6 +144,26 @@ export default function NouvelAVSPage() {
       ...prev,
       [name]: type === 'checkbox' ? checked : value
     }));
+  };
+
+  // Gestion des compétences (cases à cocher)
+  const handleCompetenceChange = (competence) => {
+    setFormData(prev => {
+      const currentCompetences = prev.competences || [];
+      if (currentCompetences.includes(competence)) {
+        // Retirer la compétence
+        return {
+          ...prev,
+          competences: currentCompetences.filter(c => c !== competence)
+        };
+      } else {
+        // Ajouter la compétence
+        return {
+          ...prev,
+          competences: [...currentCompetences, competence]
+        };
+      }
+    });
   };
 
   // Gestion de la photo
@@ -161,54 +248,6 @@ export default function NouvelAVSPage() {
     }, 500);
   };
 
-  // Composant Section accordéon
-  const Section = ({ id, title, icon, children }) => (
-    <div className="border border-gray-200 rounded-lg overflow-hidden">
-      <button
-        type="button"
-        onClick={() => toggleSection(id)}
-        className="w-full flex items-center justify-between px-4 py-3 bg-gray-50 hover:bg-gray-100 transition-colors"
-      >
-        <span className="flex items-center gap-2 font-medium text-gray-700">
-          <span>{icon}</span>
-          {title}
-        </span>
-        <svg
-          className={`w-5 h-5 text-gray-500 transition-transform ${openSections[id] ? 'rotate-180' : ''}`}
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-        >
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-        </svg>
-      </button>
-      {openSections[id] && (
-        <div className="p-4 bg-white">{children}</div>
-      )}
-    </div>
-  );
-
-  // Composant Tag pour les listes
-  const TagList = ({ items, field, onRemove }) => (
-    <div className="flex flex-wrap gap-2 mt-2">
-      {items.map((item, index) => (
-        <span
-          key={index}
-          className="inline-flex items-center gap-1 px-3 py-1 bg-[#a5fce8] text-gray-700 rounded-full text-sm"
-        >
-          {item}
-          <button
-            type="button"
-            onClick={() => onRemove(field, index)}
-            className="hover:text-red-600"
-          >
-            ×
-          </button>
-        </span>
-      ))}
-    </div>
-  );
-
   return (
     <>
       {/* Header */}
@@ -281,7 +320,7 @@ export default function NouvelAVSPage() {
           </div>
 
           {/* Section 1: État civil + Coordonnées */}
-          <Section id="civil" title="État civil & Coordonnées" icon="👤">
+          <Section id="civil" title="État civil & Coordonnées" icon="👤" isOpen={openSections.civil} onToggle={toggleSection}>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {/* Civilité */}
               <div>
@@ -440,7 +479,7 @@ export default function NouvelAVSPage() {
           </Section>
 
           {/* Section 2: Identification */}
-          <Section id="identification" title="Identification" icon="🪪">
+          <Section id="identification" title="Identification" icon="🪪" isOpen={openSections.identification} onToggle={toggleSection}>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {/* N° Sécurité sociale avec avertissement RGPD */}
               <div>
@@ -491,7 +530,7 @@ export default function NouvelAVSPage() {
           </Section>
 
           {/* Section 3: Mobilité */}
-          <Section id="mobilite" title="Mobilité & Zones d'intervention" icon="🚗">
+          <Section id="mobilite" title="Mobilité & Zones d'intervention" icon="🚗" isOpen={openSections.mobilite} onToggle={toggleSection}>
             <div className="space-y-4">
               {/* Motorisée */}
               <label className="flex items-center gap-3 cursor-pointer">
@@ -536,34 +575,38 @@ export default function NouvelAVSPage() {
           </Section>
 
           {/* Section 4: Compétences & Formations */}
-          <Section id="competences" title="Compétences & Formations" icon="🎓">
-            <div className="space-y-4">
-              {/* Compétences */}
+          <Section id="competences" title="Compétences & Formations" icon="🎓" isOpen={openSections.competences} onToggle={toggleSection}>
+            <div className="space-y-6">
+              
+              {/* Compétences - Cases à cocher */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Compétences</label>
-                <div className="flex gap-2">
-                  <input
-                    type="text"
-                    value={newCompetence}
-                    onChange={(e) => setNewCompetence(e.target.value)}
-                    placeholder="Ex: Aide toilette, Préparation repas..."
-                    className="flex-1 border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-[#d85940] focus:border-transparent"
-                    onKeyPress={(e) => {
-                      if (e.key === 'Enter') {
-                        e.preventDefault();
-                        addToList('competences', newCompetence, setNewCompetence);
-                      }
-                    }}
-                  />
-                  <button
-                    type="button"
-                    onClick={() => addToList('competences', newCompetence, setNewCompetence)}
-                    className="px-4 py-2 bg-[#74ccc3] text-white rounded-lg hover:bg-[#5cb8ae]"
-                  >
-                    +
-                  </button>
+                <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-3">
+                  <svg className="w-5 h-5 text-[#d85940]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  Compétences
+                </label>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  {COMPETENCES_LIST.map((competence) => (
+                    <label
+                      key={competence}
+                      className="flex items-center gap-3 p-3 border border-gray-200 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors"
+                    >
+                      <input
+                        type="checkbox"
+                        checked={formData.competences.includes(competence)}
+                        onChange={() => handleCompetenceChange(competence)}
+                        className="w-5 h-5 text-[#d85940] rounded focus:ring-[#d85940] border-gray-300"
+                      />
+                      <span className="text-gray-700">{competence}</span>
+                    </label>
+                  ))}
                 </div>
-                <TagList items={formData.competences} field="competences" onRemove={removeFromList} />
+                {formData.competences.length > 0 && (
+                  <p className="text-sm text-[#74ccc3] mt-2">
+                    ✓ {formData.competences.length} compétence(s) sélectionnée(s)
+                  </p>
+                )}
               </div>
               
               {/* Notes compétences */}
@@ -574,6 +617,7 @@ export default function NouvelAVSPage() {
                   value={formData.notes_competences}
                   onChange={handleChange}
                   rows="2"
+                  placeholder="Précisions supplémentaires sur les compétences..."
                   className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-[#d85940] focus:border-transparent"
                 />
               </div>
@@ -665,7 +709,7 @@ export default function NouvelAVSPage() {
           </Section>
 
           {/* Section 5: Tarification & Liens */}
-          <Section id="tarification" title="Tarification & Liens Drive" icon="💰">
+          <Section id="tarification" title="Tarification & Liens Drive" icon="💰" isOpen={openSections.tarification} onToggle={toggleSection}>
             <div className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                 <div>
