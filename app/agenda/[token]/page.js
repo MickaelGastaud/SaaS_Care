@@ -71,6 +71,26 @@ export default function PublicAgendaPage() {
   const [lastUpdate, setLastUpdate] = useState(null);
 
   // ==================== CHARGEMENT ====================
+  // Bloquer les robots d'indexation
+  useEffect(() => {
+    // Ajouter meta robots noindex
+    const metaRobots = document.createElement('meta');
+    metaRobots.name = 'robots';
+    metaRobots.content = 'noindex, nofollow, noarchive, nosnippet';
+    document.head.appendChild(metaRobots);
+    
+    // Ajouter meta googlebot spécifique
+    const metaGooglebot = document.createElement('meta');
+    metaGooglebot.name = 'googlebot';
+    metaGooglebot.content = 'noindex, nofollow';
+    document.head.appendChild(metaGooglebot);
+    
+    return () => {
+      document.head.removeChild(metaRobots);
+      document.head.removeChild(metaGooglebot);
+    };
+  }, []);
+
   useEffect(() => {
     loadAgenda();
     

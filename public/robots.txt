@@ -1,0 +1,36 @@
+# robots.txt - Care-Pilot
+# Bloquer l'indexation des pages sensibles
+
+User-agent: *
+# Bloquer les agendas partagés
+Disallow: /agenda/
+# Bloquer les pages d'API si existantes
+Disallow: /api/
+
+# Bloquer tous les robots connus
+User-agent: Googlebot
+Disallow: /agenda/
+
+User-agent: Bingbot
+Disallow: /agenda/
+
+User-agent: Slurp
+Disallow: /agenda/
+
+User-agent: DuckDuckBot
+Disallow: /agenda/
+
+User-agent: Baiduspider
+Disallow: /agenda/
+
+User-agent: YandexBot
+Disallow: /agenda/
+
+User-agent: facebookexternalhit
+Disallow: /agenda/
+
+User-agent: Twitterbot
+Disallow: /agenda/
+
+User-agent: LinkedInBot
+Disallow: /agenda/
