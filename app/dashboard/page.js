@@ -174,7 +174,7 @@ export default function DashboardPage() {
         {/* SECTION 1 : ÉVÉNEMENTS */}
         {/* Bordure turquoise distinctive */}
         {/* ============================================ */}
-        <section className="bg-white rounded-2xl shadow-sm border-l-4 border-[#74ccc3] overflow-hidden">
+        <section id="section-evenements" className="bg-white rounded-2xl shadow-sm border-l-4 border-[#74ccc3] overflow-hidden scroll-mt-20">
           <EvenementsModule showTitle={true} />
         </section>
 
@@ -182,7 +182,7 @@ export default function DashboardPage() {
         {/* SECTION 2 : TÂCHES */}
         {/* Bordure orange distinctive */}
         {/* ============================================ */}
-        <section className="bg-white rounded-2xl shadow-sm border-l-4 border-[#d85940] overflow-hidden">
+        <section id="section-taches" className="bg-white rounded-2xl shadow-sm border-l-4 border-[#d85940] overflow-hidden scroll-mt-20">
           <TachesModule showTitle={true} />
         </section>
 
@@ -190,7 +190,7 @@ export default function DashboardPage() {
         {/* SECTION 3 : CALENDRIER / PLANNING */}
         {/* Bordure violette distinctive */}
         {/* ============================================ */}
-        <section className="bg-white rounded-2xl shadow-sm border-l-4 border-purple-500 overflow-hidden">
+        <section id="section-planning" className="bg-white rounded-2xl shadow-sm border-l-4 border-purple-500 overflow-hidden scroll-mt-20">
           <CalendrierModule showTitle={true} />
         </section>
 
@@ -249,6 +249,71 @@ export default function DashboardPage() {
         </section>
 
       </div>
+
+      {/* ============================================ */}
+      {/* BARRE DE RACCOURCIS FLOTTANTE */}
+      {/* ============================================ */}
+      <nav className="fixed right-4 top-1/2 -translate-y-1/2 z-30 flex flex-col gap-2">
+        {/* Événements */}
+        <button
+          onClick={() => document.getElementById('section-evenements')?.scrollIntoView({ behavior: 'smooth' })}
+          className="group relative w-12 h-12 bg-white border-2 border-[#74ccc3] text-[#74ccc3] rounded-xl shadow-lg hover:bg-[#74ccc3] hover:text-white transition-all hover:scale-110"
+          title="Événements"
+        >
+          <svg className="w-5 h-5 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+          </svg>
+          {/* Tooltip */}
+          <span className="absolute right-full mr-3 top-1/2 -translate-y-1/2 px-2 py-1 bg-gray-800 text-white text-xs rounded whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+            Événements
+          </span>
+        </button>
+
+        {/* Tâches */}
+        <button
+          onClick={() => document.getElementById('section-taches')?.scrollIntoView({ behavior: 'smooth' })}
+          className="group relative w-12 h-12 bg-white border-2 border-[#d85940] text-[#d85940] rounded-xl shadow-lg hover:bg-[#d85940] hover:text-white transition-all hover:scale-110"
+          title="Tâches"
+        >
+          <svg className="w-5 h-5 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+          </svg>
+          {/* Tooltip */}
+          <span className="absolute right-full mr-3 top-1/2 -translate-y-1/2 px-2 py-1 bg-gray-800 text-white text-xs rounded whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+            Tâches
+          </span>
+        </button>
+
+        {/* Planning */}
+        <button
+          onClick={() => document.getElementById('section-planning')?.scrollIntoView({ behavior: 'smooth' })}
+          className="group relative w-12 h-12 bg-white border-2 border-purple-500 text-purple-500 rounded-xl shadow-lg hover:bg-purple-500 hover:text-white transition-all hover:scale-110"
+          title="Planning"
+        >
+          <svg className="w-5 h-5 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+          </svg>
+          {/* Tooltip */}
+          <span className="absolute right-full mr-3 top-1/2 -translate-y-1/2 px-2 py-1 bg-gray-800 text-white text-xs rounded whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+            Planning
+          </span>
+        </button>
+
+        {/* Remonter en haut */}
+        <button
+          onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+          className="group relative w-12 h-12 bg-gray-100 border-2 border-gray-300 text-gray-500 rounded-xl shadow-lg hover:bg-gray-700 hover:border-gray-700 hover:text-white transition-all hover:scale-110 mt-2"
+          title="Haut de page"
+        >
+          <svg className="w-5 h-5 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 10l7-7m0 0l7 7m-7-7v18" />
+          </svg>
+          {/* Tooltip */}
+          <span className="absolute right-full mr-3 top-1/2 -translate-y-1/2 px-2 py-1 bg-gray-800 text-white text-xs rounded whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+            Haut de page
+          </span>
+        </button>
+      </nav>
     </div>
   );
 }
