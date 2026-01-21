@@ -2,7 +2,7 @@
 import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 
 // ==================== CONFIGURATION ====================
-const RETENTION_MONTHS = 24; // Conserver 24 mois d'historique
+const RETENTION_MONTHS = 24;
 
 // ==================== COMPOSANT AUTOCOMPLETE ====================
 function AutocompleteInput({ label, placeholder, value, onChange, suggestions, onSelect, icon }) {
@@ -50,7 +50,7 @@ function AutocompleteInput({ label, placeholder, value, onChange, suggestions, o
           onFocus={() => setIsFocused(true)}
           onBlur={() => setTimeout(() => { if (!wrapperRef.current?.contains(document.activeElement)) { setIsFocused(false); setIsOpen(false); } }, 150)}
           placeholder={placeholder}
-          className={`w-full border border-gray-300 rounded-lg px-3 py-2.5 focus:ring-2 focus:ring-[#74ccc3] focus:border-transparent ${icon ? 'pl-10' : ''}`}
+          className={`w-full border border-gray-300 rounded-lg px-3 py-2.5 focus:ring-2 focus:ring-[#d85940]/30 focus:border-[#d85940] ${icon ? 'pl-10' : ''}`}
           autoComplete="off"
         />
       </div>
@@ -100,12 +100,14 @@ function EventDetailModal({ event, isOpen, onClose, onEdit, onTogglePin, onDelet
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-xl shadow-xl max-w-lg w-full overflow-hidden">
-        {/* Header */}
-        <div className="bg-[#74ccc3] px-6 py-4">
+        {/* Header - sobre */}
+        <div className="bg-gray-50 border-b border-gray-200 px-6 py-4">
           <div className="flex items-start justify-between">
-            <div className="text-white">
-              <p className="text-white/80 text-sm">Événement du {new Date(event.date).toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}</p>
-              <h3 className="text-lg font-semibold mt-1 flex items-center gap-2">
+            <div>
+              <p className="text-gray-500 text-sm">
+                Événement du {new Date(event.date).toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
+              </p>
+              <h3 className="text-lg font-semibold text-gray-800 mt-1 flex items-center gap-2">
                 {isGeneral ? (
                   <span>📋 Événement général</span>
                 ) : (
@@ -113,8 +115,8 @@ function EventDetailModal({ event, isOpen, onClose, onEdit, onTogglePin, onDelet
                 )}
               </h3>
             </div>
-            <button onClick={onClose} className="p-2 hover:bg-white/20 rounded-lg transition-colors">
-              <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <button onClick={onClose} className="p-2 hover:bg-gray-200 rounded-lg transition-colors">
+              <svg className="w-5 h-5 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
               </svg>
             </button>
@@ -128,7 +130,6 @@ function EventDetailModal({ event, isOpen, onClose, onEdit, onTogglePin, onDelet
             <p className="text-gray-800 whitespace-pre-wrap">{event.description || 'Aucune description'}</p>
           </div>
 
-          {/* Patient concerné (si sur fiche AVS ou si renseigné) */}
           {event.beneficiaireName && (
             <div>
               <p className="text-sm font-medium text-gray-500 mb-1">Patient concerné</p>
@@ -136,7 +137,6 @@ function EventDetailModal({ event, isOpen, onClose, onEdit, onTogglePin, onDelet
             </div>
           )}
 
-          {/* AVS concernée (si sur fiche bénéficiaire ou si renseigné) */}
           {event.avsName && (
             <div>
               <p className="text-sm font-medium text-gray-500 mb-1">AVS concernée</p>
@@ -162,7 +162,7 @@ function EventDetailModal({ event, isOpen, onClose, onEdit, onTogglePin, onDelet
             onClick={() => onTogglePin(event.id)} 
             className={`flex-1 py-2 px-4 rounded-lg transition-colors flex items-center justify-center gap-2 ${
               event.isPinned 
-                ? 'bg-[#74ccc3] text-white hover:bg-[#5cb8ae]' 
+                ? 'bg-[#d85940] text-white hover:bg-[#c04330]' 
                 : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
             }`}
           >
@@ -223,7 +223,6 @@ export default function EvenementsModule({ entityType = null, entityId = null, s
   const loadData = useCallback(() => {
     const allEvents = JSON.parse(localStorage.getItem(storageKey) || '[]');
 
-    // Nettoyage des anciens événements (> 24 mois)
     const cutoffDate = new Date();
     cutoffDate.setMonth(cutoffDate.getMonth() - RETENTION_MONTHS);
     const validEvents = allEvents.filter(e => new Date(e.created_at || e.date) > cutoffDate);
@@ -255,17 +254,14 @@ export default function EvenementsModule({ entityType = null, entityId = null, s
   // ==================== TRI ====================
   const sortedEvents = useMemo(() => {
     return [...events].sort((a, b) => {
-      // Épinglés en premier
       if (a.isPinned && !b.isPinned) return -1;
       if (!a.isPinned && b.isPinned) return 1;
-      // Puis par date décroissante
       return (b.date || '').localeCompare(a.date || '') || (b.created_at || '').localeCompare(a.created_at || '');
     });
   }, [events]);
 
   // ==================== HELPERS ====================
   const getClientName = useCallback((event) => {
-    // Événement général (sans entité liée)
     if (!event.clientId || event.type === 'general') return null;
     
     if (event.type === 'beneficiaire') {
@@ -297,7 +293,6 @@ export default function EvenementsModule({ entityType = null, entityId = null, s
       alert('Veuillez décrire l\'événement'); 
       return; 
     }
-    // Pas de validation obligatoire pour patient/AVS - on peut créer un événement général
 
     if (editingEvent) {
       const updated = events.map(e => e.id === editingEvent.id ? { 
@@ -389,14 +384,14 @@ export default function EvenementsModule({ entityType = null, entityId = null, s
 
   // ==================== RENDU ====================
   return (
-    <div className="bg-white rounded-xl shadow-sm overflow-hidden">
-      {/* Header */}
+    <div className="bg-white rounded-xl overflow-hidden">
+      {/* Header - DESIGN HARMONISÉ */}
       {showTitle && (
-        <div className="p-4 border-b border-gray-100">
+        <div className="p-4 border-b border-gray-200">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div className="flex items-center space-x-3">
-              <div className="p-2 bg-[#74ccc3]/20 rounded-lg">
-                <svg className="w-5 h-5 text-[#74ccc3]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <div className="p-2 bg-gray-100 rounded-lg">
+                <svg className="w-5 h-5 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                 </svg>
               </div>
@@ -408,7 +403,7 @@ export default function EvenementsModule({ entityType = null, entityId = null, s
 
             <button
               onClick={openNewForm}
-              className="inline-flex items-center gap-2 px-4 py-2 bg-[#74ccc3] text-white rounded-lg hover:bg-[#5cb8ae] transition-colors text-sm"
+              className="inline-flex items-center gap-2 px-4 py-2 bg-[#d85940] text-white rounded-lg hover:bg-[#c04330] transition-colors text-sm font-medium"
             >
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -432,7 +427,7 @@ export default function EvenementsModule({ entityType = null, entityId = null, s
           {!showTitle && (
             <button
               onClick={openNewForm}
-              className="mt-4 inline-flex items-center gap-2 px-4 py-2 bg-[#74ccc3] text-white rounded-lg hover:bg-[#5cb8ae] transition-colors text-sm"
+              className="mt-4 inline-flex items-center gap-2 px-4 py-2 bg-[#d85940] text-white rounded-lg hover:bg-[#c04330] transition-colors text-sm"
             >
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -444,8 +439,9 @@ export default function EvenementsModule({ entityType = null, entityId = null, s
       ) : (
         <div className="overflow-x-auto">
           <table className="w-full">
+            {/* Header tableau - GRIS NEUTRE */}
             <thead>
-              <tr className="bg-[#74ccc3] text-white">
+              <tr className="bg-gray-100 text-gray-600">
                 {isDashboardMode && <th className="px-4 py-3 text-left text-sm font-semibold">Patient / AVS</th>}
                 <th className="px-4 py-3 text-left text-sm font-semibold">Créé par</th>
                 <th className="px-4 py-3 text-left text-sm font-semibold">Description</th>
@@ -488,7 +484,7 @@ export default function EvenementsModule({ entityType = null, entityId = null, s
                     </td>
                     <td className="px-4 py-3 text-center">
                       {event.isPinned && (
-                        <svg className="w-5 h-5 text-[#74ccc3] inline-block" fill="currentColor" viewBox="0 0 24 24" stroke="currentColor">
+                        <svg className="w-5 h-5 text-[#d85940] inline-block" fill="currentColor" viewBox="0 0 24 24" stroke="currentColor">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
                         </svg>
                       )}
@@ -527,22 +523,29 @@ export default function EvenementsModule({ entityType = null, entityId = null, s
       {showForm && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-xl shadow-xl max-w-md w-full overflow-hidden">
-            {/* Header du formulaire */}
-            <div className="bg-[#74ccc3] px-6 py-4">
-              <h3 className="text-lg font-semibold text-white">
-                {editingEvent ? 'MODIFIER L\'ÉVÉNEMENT' : 'NOUVEL ÉVÉNEMENT'}
-              </h3>
+            {/* Header formulaire - SOBRE */}
+            <div className="bg-gray-50 border-b border-gray-200 px-6 py-4">
+              <div className="flex items-center justify-between">
+                <h3 className="text-lg font-semibold text-gray-800">
+                  {editingEvent ? 'Modifier l\'événement' : 'Nouvel événement'}
+                </h3>
+                <button onClick={closeForm} className="p-2 hover:bg-gray-200 rounded-lg transition-colors">
+                  <svg className="w-5 h-5 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
             </div>
 
             <div className="p-6 space-y-4">
               {/* Date */}
               <div>
-                <label className="block text-sm text-gray-500 mb-1">Le</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Date</label>
                 <input 
                   type="date" 
                   value={formData.date} 
                   onChange={(e) => setFormData({ ...formData, date: e.target.value })}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2.5 focus:ring-2 focus:ring-[#74ccc3] focus:border-transparent"
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2.5 focus:ring-2 focus:ring-[#d85940]/30 focus:border-[#d85940]"
                 />
               </div>
 
@@ -604,12 +607,13 @@ export default function EvenementsModule({ entityType = null, entityId = null, s
 
               {/* Description */}
               <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Description *</label>
                 <textarea
                   value={formData.description}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                   rows="4"
                   placeholder="Que s'est-il passé ?"
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2.5 focus:ring-2 focus:ring-[#74ccc3] focus:border-transparent resize-none"
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2.5 focus:ring-2 focus:ring-[#d85940]/30 focus:border-[#d85940] resize-none"
                 />
               </div>
 
@@ -617,13 +621,13 @@ export default function EvenementsModule({ entityType = null, entityId = null, s
               <div className="flex gap-3 pt-2">
                 <button 
                   onClick={handleSave} 
-                  className="flex-1 bg-[#74ccc3] text-white py-2.5 px-4 rounded-lg hover:bg-[#5cb8ae] transition-colors font-medium"
+                  className="flex-1 bg-[#d85940] text-white py-2.5 px-4 rounded-lg hover:bg-[#c04330] transition-colors font-medium"
                 >
-                  Valider
+                  {editingEvent ? 'Enregistrer' : 'Valider'}
                 </button>
                 <button 
                   onClick={closeForm} 
-                  className="px-6 py-2.5 text-[#d85940] hover:bg-red-50 rounded-lg transition-colors font-medium"
+                  className="px-6 py-2.5 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors font-medium"
                 >
                   Annuler
                 </button>

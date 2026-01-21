@@ -77,7 +77,7 @@ function AutocompleteInput({ label, placeholder, value, onChange, suggestions, o
         onFocus={() => setIsFocused(true)}
         onBlur={() => setTimeout(() => { if (!wrapperRef.current?.contains(document.activeElement)) { setIsFocused(false); setIsOpen(false); } }, 150)}
         placeholder={placeholder}
-        className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-[#d85940] focus:border-transparent"
+        className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-[#d85940]/30 focus:border-[#d85940]"
         autoComplete="off"
       />
       {isOpen && filteredSuggestions.length > 0 && (
@@ -122,18 +122,16 @@ function StatusSelector({ currentStatus, onStatusChange, isArchived }) {
   const buttonRef = useRef(null);
   const menuRef = useRef(null);
 
-  // Calculer la position du menu quand il s'ouvre
   useEffect(() => {
     if (isOpen && buttonRef.current) {
       const rect = buttonRef.current.getBoundingClientRect();
       setMenuPosition({
-        top: rect.bottom + window.scrollY + 4, // 4px de marge
+        top: rect.bottom + window.scrollY + 4,
         left: rect.left + window.scrollX
       });
     }
   }, [isOpen]);
 
-  // Fermer le menu si on clique ailleurs
   useEffect(() => {
     function handleClickOutside(event) {
       if (
@@ -152,7 +150,6 @@ function StatusSelector({ currentStatus, onStatusChange, isArchived }) {
     }
   }, [isOpen]);
 
-  // Fermer le menu si on scroll
   useEffect(() => {
     function handleScroll() {
       if (isOpen) setIsOpen(false);
@@ -172,7 +169,6 @@ function StatusSelector({ currentStatus, onStatusChange, isArchived }) {
   const currentConfig = STATUS_CONFIG[currentStatus] || STATUS_CONFIG.a_faire;
   const availableStatuses = ['a_faire', 'en_cours', 'terminee'].filter(s => s !== currentStatus);
 
-  // Le menu dropdown rendu via Portal
   const dropdownMenu = isOpen && typeof document !== 'undefined' ? createPortal(
     <div
       ref={menuRef}
@@ -251,8 +247,8 @@ function TaskDetailModal({ task, isOpen, onClose, onEdit, onAssignToMe, onArchiv
         {/* Barre de priorité en haut */}
         <div className={`h-2 ${priorityConfig.bar}`}></div>
         
-        {/* Header */}
-        <div className="p-6 border-b border-gray-100">
+        {/* Header - SOBRE */}
+        <div className="bg-gray-50 border-b border-gray-200 p-6">
           <div className="flex items-start justify-between">
             <div className="flex-1">
               <div className="flex items-center gap-2 mb-1">
@@ -267,7 +263,7 @@ function TaskDetailModal({ task, isOpen, onClose, onEdit, onAssignToMe, onArchiv
                 </p>
               )}
             </div>
-            <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
+            <button onClick={onClose} className="p-2 hover:bg-gray-200 rounded-lg transition-colors">
               <svg className="w-5 h-5 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
               </svg>
@@ -350,7 +346,7 @@ function TaskDetailModal({ task, isOpen, onClose, onEdit, onAssignToMe, onArchiv
         {/* Actions */}
         <div className="p-6 border-t border-gray-100 flex gap-3 flex-wrap">
           {!isArchived && isUnassigned && !isTerminee && (
-            <button onClick={() => onAssignToMe(task.id)} className="flex-1 py-2 px-4 bg-[#74ccc3] text-white rounded-lg hover:bg-[#5cb8ae] transition-colors flex items-center justify-center gap-2">
+            <button onClick={() => onAssignToMe(task.id)} className="flex-1 py-2 px-4 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors flex items-center justify-center gap-2">
               <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>
               Je m'en occupe
             </button>
@@ -376,7 +372,7 @@ function TaskDetailModal({ task, isOpen, onClose, onEdit, onAssignToMe, onArchiv
 }
 
 // ==================== COMPOSANT PRINCIPAL ====================
-export default function TachesModule({ entityType = null, entityId = null }) {
+export default function TachesModule({ entityType = null, entityId = null, showTitle = true }) {
   const router = useRouter();
   const [user, setUser] = useState(null);
   const [tasks, setTasks] = useState([]);
@@ -482,15 +478,11 @@ export default function TachesModule({ entityType = null, entityId = null }) {
         return task.assigne === filterAssigne;
       })
       .sort((a, b) => {
-        // Priorité haute en premier
         const priorityOrder = { haute: 0, normale: 1, basse: 2 };
         if (a.priorite !== b.priorite) return (priorityOrder[a.priorite] || 1) - (priorityOrder[b.priorite] || 1);
-        // Non assignées ensuite
         if (!a.assigne && b.assigne) return -1;
         if (a.assigne && !b.assigne) return 1;
-        // Par statut
         if (a.status !== b.status) return a.status === 'a_faire' ? -1 : 1;
-        // Par date
         return (a.echeance || '9999-12-31').localeCompare(b.echeance || '9999-12-31');
       });
   }, [tasks, archives, filter, filterAssigne, isDashboardMode, user?.name]);
@@ -539,7 +531,6 @@ export default function TachesModule({ entityType = null, entityId = null }) {
     });
     saveTasks(updated);
     
-    // Mettre à jour viewingTask si ouverte
     if (viewingTask && viewingTask.id === taskId) {
       setViewingTask({ ...viewingTask, status: newStatus, updated_at: new Date().toISOString() });
     }
@@ -612,63 +603,66 @@ export default function TachesModule({ entityType = null, entityId = null }) {
 
   // ==================== RENDU ====================
   return (
-    <div className="bg-white rounded-xl shadow-sm overflow-hidden">
-      {/* Header */}
-      <div className="p-4 border-b border-gray-100">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div className="flex items-center space-x-3">
-            <svg className="w-5 h-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
-            </svg>
-            <div>
-              <span className="text-lg font-bold text-gray-800">Tâches</span>
-              <div className="flex items-center gap-3 text-sm flex-wrap">
-                <span className="text-gray-500">{stats.enCours} en cours</span>
-                {stats.urgentes > 0 && <span className="text-red-500 font-medium">🔴 {stats.urgentes} urgente(s)</span>}
-                {stats.enRetard > 0 && <span className="text-orange-500 font-medium">{stats.enRetard} en retard</span>}
+    <div className="bg-white rounded-xl overflow-hidden">
+      {/* Header - DESIGN HARMONISÉ */}
+      {showTitle && (
+        <div className="p-4 border-b border-gray-200">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="flex items-center space-x-3">
+              <div className="p-2 bg-gray-100 rounded-lg">
+                <svg className="w-5 h-5 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+                </svg>
+              </div>
+              <div>
+                <span className="text-lg font-bold text-gray-800">Tâches</span>
+                <div className="flex items-center gap-3 text-sm flex-wrap">
+                  <span className="text-gray-500">{stats.enCours} en cours</span>
+                  {stats.urgentes > 0 && <span className="text-red-500 font-medium">🔴 {stats.urgentes} urgente(s)</span>}
+                </div>
               </div>
             </div>
-          </div>
 
-          <div className="flex items-center gap-3 flex-wrap">
-            {isDashboardMode && (
-              <select
-                value={filterAssigne}
-                onChange={(e) => setFilterAssigne(e.target.value)}
-                className="border border-gray-200 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:border-[#d85940]"
+            <div className="flex items-center gap-3 flex-wrap">
+              {isDashboardMode && (
+                <select
+                  value={filterAssigne}
+                  onChange={(e) => setFilterAssigne(e.target.value)}
+                  className="border border-gray-200 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#d85940]/30 focus:border-[#d85940]"
+                >
+                  <option value="all">Tous</option>
+                  <option value="me">Mes tâches</option>
+                  {collaborateurs.filter(c => c !== user?.name).map(c => <option key={c} value={c}>{c}</option>)}
+                </select>
+              )}
+              <button
+                onClick={() => { setEditingTask(null); setFormData({ titre: '', description: '', priorite: 'normale', echeance: '', assigne: user?.name || '', type: entityType || 'beneficiaire', clientId: entityId || '', clientName: '' }); setShowTaskForm(true); }}
+                className="inline-flex items-center gap-2 px-4 py-2 bg-[#d85940] text-white rounded-lg hover:bg-[#c04330] transition-colors text-sm font-medium"
               >
-                <option value="all">Tous</option>
-                <option value="me">Mes tâches</option>
-                {collaborateurs.filter(c => c !== user?.name).map(c => <option key={c} value={c}>{c}</option>)}
-              </select>
-            )}
-            <button
-              onClick={() => { setEditingTask(null); setFormData({ titre: '', description: '', priorite: 'normale', echeance: '', assigne: user?.name || '', type: entityType || 'beneficiaire', clientId: entityId || '', clientName: '' }); setShowTaskForm(true); }}
-              className="inline-flex items-center gap-2 px-4 py-2 bg-[#d85940] text-white rounded-lg hover:bg-[#c04330] transition-colors text-sm"
-            >
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>
-              Nouvelle tâche
-            </button>
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>
+                Nouvelle tâche
+              </button>
+            </div>
           </div>
         </div>
-      </div>
+      )}
 
       {/* Filtres */}
-      <div className="px-4 py-3 bg-gray-50 border-b border-gray-100">
+      <div className="px-4 py-3 bg-gray-50 border-b border-gray-200">
         <div className="flex gap-2 flex-wrap">
           {[
             { key: 'en_cours', label: `En cours (${stats.enCours})` },
-            { key: 'urgentes', label: `🔴 Urgentes (${stats.urgentes})`, color: 'red' },
-            { key: 'non_assignee', label: `Non assignées (${stats.nonAssignee})`, color: 'orange' },
+            { key: 'urgentes', label: `Urgentes (${stats.urgentes})`, color: 'red' },
+            { key: 'non_assignee', label: `Non assignées (${stats.nonAssignee})` },
             { key: 'terminee', label: `Terminées (${stats.terminee})` },
-            ...(!isDashboardMode ? [{ key: 'archives', label: `📦 Archives (${stats.archives})`, color: 'gray' }] : [])
+            ...(!isDashboardMode ? [{ key: 'archives', label: `Archives (${stats.archives})` }] : [])
           ].map(({ key, label, color }) => (
             <button
               key={key}
               onClick={() => setFilter(key)}
               className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
                 filter === key
-                  ? color === 'red' ? 'bg-red-500 text-white' : color === 'orange' ? 'bg-orange-500 text-white' : color === 'gray' ? 'bg-gray-600 text-white' : 'bg-[#d85940] text-white'
+                  ? color === 'red' ? 'bg-red-500 text-white' : 'bg-[#d85940] text-white'
                   : 'bg-white text-gray-600 hover:bg-gray-100 border border-gray-200'
               }`}
             >
@@ -701,22 +695,21 @@ export default function TachesModule({ entityType = null, entityId = null }) {
       ) : (
         <div className="overflow-x-auto">
           <table className="w-full">
+            {/* Header tableau - GRIS NEUTRE */}
             <thead>
-              <tr className="bg-[#74ccc3] text-white">
-                <th className="w-1 rounded-tl-xl"></th>
+              <tr className="bg-gray-100 text-gray-600">
                 {isDashboardMode && <th className="px-4 py-3 text-left text-sm font-semibold">Patient / AVS</th>}
                 <th className="px-4 py-3 text-left text-sm font-semibold">Titre</th>
                 <th className="px-4 py-3 text-left text-sm font-semibold hidden md:table-cell">Créé par</th>
                 <th className="px-4 py-3 text-left text-sm font-semibold">Assigné à</th>
                 <th className="px-4 py-3 text-left text-sm font-semibold">Status</th>
                 <th className="px-4 py-3 text-left text-sm font-semibold">{filter === 'archives' ? 'Archivé le' : 'Avant le'}</th>
-                <th className="px-4 py-3 text-center text-sm font-semibold w-24 rounded-tr-xl">Actions</th>
+                <th className="px-4 py-3 text-center text-sm font-semibold w-24">Actions</th>
               </tr>
             </thead>
             <tbody>
               {filteredTasks.map((task, index) => {
                 const deadlineBadge = getDeadlineBadge(task);
-                const priorityConfig = PRIORITY_CONFIG[task.priorite] || PRIORITY_CONFIG.normale;
                 const clientName = getClientName(task);
                 const isUnassigned = !task.assigne;
                 const isArchived = filter === 'archives';
@@ -728,13 +721,8 @@ export default function TachesModule({ entityType = null, entityId = null }) {
                     onClick={() => { setViewingTask(task); setIsViewingArchived(isArchived); }}
                     className={`border-b border-gray-100 hover:bg-gray-50 transition-colors cursor-pointer ${
                       index % 2 === 0 ? 'bg-white' : 'bg-gray-50/50'
-                    } ${!isArchived && isOverdue(task) ? 'bg-red-50/50' : ''} ${
-                      !isArchived && task.priorite === 'haute' && task.status !== 'terminee' ? priorityConfig.rowBg : ''
-                    }`}
+                    } ${!isArchived && isOverdue(task) ? 'bg-red-50/50' : ''}`}
                   >
-                    {/* Barre de priorité */}
-                    <td className={`w-1.5 ${priorityConfig.bar}`}></td>
-                    
                     {isDashboardMode && <td className="px-4 py-3"><span className="font-medium text-gray-800">{clientName}</span></td>}
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-2">
@@ -752,7 +740,7 @@ export default function TachesModule({ entityType = null, entityId = null }) {
                       {!isArchived && isUnassigned && !isTerminee ? (
                         <button
                           onClick={(e) => { e.stopPropagation(); handleAssignToMe(task.id); }}
-                          className="inline-flex items-center gap-1 px-2 py-1 bg-[#74ccc3] text-white rounded text-xs font-medium hover:bg-[#5cb8ae] transition-colors"
+                          className="inline-flex items-center gap-1 px-2 py-1 bg-gray-200 text-gray-700 rounded text-xs font-medium hover:bg-gray-300 transition-colors"
                         >
                           Je m'en occupe
                         </button>
@@ -808,55 +796,68 @@ export default function TachesModule({ entityType = null, entityId = null }) {
 
       <ConfirmModal isOpen={confirmModal.isOpen} title={confirmModal.type === 'delete' ? 'Supprimer ?' : 'Archiver ?'} message={confirmModal.type === 'delete' ? 'Cette action est irréversible.' : 'La tâche sera conservée 12 mois.'} confirmText={confirmModal.type === 'delete' ? 'Supprimer' : 'Archiver'} confirmColor={confirmModal.type === 'delete' ? 'bg-red-500 hover:bg-red-600' : 'bg-gray-500 hover:bg-gray-600'} onConfirm={confirmModal.type === 'delete' ? confirmDelete : confirmArchive} onCancel={() => setConfirmModal({ isOpen: false, type: null, taskId: null })} />
 
-      {/* Formulaire */}
+      {/* Formulaire - SOBRE */}
       {showTaskForm && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-xl shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto">
-            <div className="p-6">
-              <h3 className="text-lg font-semibold text-gray-800 mb-4">{editingTask ? 'Modifier' : 'Nouvelle tâche'}</h3>
-              <div className="space-y-4">
-                {isDashboardMode && !editingTask && (
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Associer à</label>
-                    <div className="flex gap-2 mb-3">
-                      <button type="button" onClick={() => setFormData({ ...formData, type: 'beneficiaire', clientId: '', clientName: '' })} className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-colors ${formData.type === 'beneficiaire' ? 'bg-blue-500 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}>👤 Bénéficiaire</button>
-                      <button type="button" onClick={() => setFormData({ ...formData, type: 'avs', clientId: '', clientName: '' })} className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-colors ${formData.type === 'avs' ? 'bg-[#74ccc3] text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}>💚 Auxiliaire</button>
-                    </div>
-                    <AutocompleteInput label={formData.type === 'beneficiaire' ? 'Bénéficiaire *' : 'Auxiliaire *'} placeholder="Rechercher..." value={formData.clientName} onChange={(v) => setFormData({ ...formData, clientName: v, clientId: '' })} suggestions={formData.type === 'beneficiaire' ? beneficiaireSuggestions : auxiliaireSuggestions} onSelect={(s) => setFormData({ ...formData, clientId: s.id, clientName: s.label })} />
-                  </div>
-                )}
+            {/* Header formulaire - SOBRE */}
+            <div className="bg-gray-50 border-b border-gray-200 px-6 py-4">
+              <div className="flex items-center justify-between">
+                <h3 className="text-lg font-semibold text-gray-800">
+                  {editingTask ? 'Modifier la tâche' : 'Nouvelle tâche'}
+                </h3>
+                <button onClick={closeForm} className="p-2 hover:bg-gray-200 rounded-lg transition-colors">
+                  <svg className="w-5 h-5 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+
+            <div className="p-6 space-y-4">
+              {isDashboardMode && !editingTask && (
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Titre *</label>
-                  <input type="text" value={formData.titre} onChange={(e) => setFormData({ ...formData, titre: e.target.value })} placeholder="Que faut-il faire ?" className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-[#d85940] focus:border-transparent" />
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Associer à</label>
+                  <div className="flex gap-2 mb-3">
+                    <button type="button" onClick={() => setFormData({ ...formData, type: 'beneficiaire', clientId: '', clientName: '' })} className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-colors ${formData.type === 'beneficiaire' ? 'bg-gray-700 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}>👤 Bénéficiaire</button>
+                    <button type="button" onClick={() => setFormData({ ...formData, type: 'avs', clientId: '', clientName: '' })} className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-colors ${formData.type === 'avs' ? 'bg-gray-700 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}>💚 Auxiliaire</button>
+                  </div>
+                  <AutocompleteInput label={formData.type === 'beneficiaire' ? 'Bénéficiaire *' : 'Auxiliaire *'} placeholder="Rechercher..." value={formData.clientName} onChange={(v) => setFormData({ ...formData, clientName: v, clientId: '' })} suggestions={formData.type === 'beneficiaire' ? beneficiaireSuggestions : auxiliaireSuggestions} onSelect={(s) => setFormData({ ...formData, clientId: s.id, clientName: s.label })} />
+                </div>
+              )}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Titre *</label>
+                <input type="text" value={formData.titre} onChange={(e) => setFormData({ ...formData, titre: e.target.value })} placeholder="Que faut-il faire ?" className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-[#d85940]/30 focus:border-[#d85940]" />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                <textarea value={formData.description} onChange={(e) => setFormData({ ...formData, description: e.target.value })} rows="2" placeholder="Détails..." className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-[#d85940]/30 focus:border-[#d85940]" />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Priorité</label>
+                  <select value={formData.priorite} onChange={(e) => setFormData({ ...formData, priorite: e.target.value })} className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-[#d85940]/30 focus:border-[#d85940]">
+                    <option value="basse">⚪ Basse</option>
+                    <option value="normale">🔵 Normale</option>
+                    <option value="haute">🔴 Haute (Urgente)</option>
+                  </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
-                  <textarea value={formData.description} onChange={(e) => setFormData({ ...formData, description: e.target.value })} rows="2" placeholder="Détails..." className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-[#d85940] focus:border-transparent" />
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Priorité</label>
-                    <select value={formData.priorite} onChange={(e) => setFormData({ ...formData, priorite: e.target.value })} className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-[#d85940] focus:border-transparent">
-                      <option value="basse">⚪ Basse</option>
-                      <option value="normale">🔵 Normale</option>
-                      <option value="haute">🔴 Haute (Urgente)</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Échéance</label>
-                    <input type="date" value={formData.echeance} onChange={(e) => setFormData({ ...formData, echeance: e.target.value })} className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-[#d85940] focus:border-transparent" />
-                  </div>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Assigné à</label>
-                  <input type="text" value={formData.assigne} onChange={(e) => setFormData({ ...formData, assigne: e.target.value })} placeholder="Laisser vide = visible par tous" className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-[#d85940] focus:border-transparent" />
-                  <p className="text-xs text-gray-500 mt-1">💡 Non assigné = tous peuvent la prendre</p>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Échéance</label>
+                  <input type="date" value={formData.echeance} onChange={(e) => setFormData({ ...formData, echeance: e.target.value })} className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-[#d85940]/30 focus:border-[#d85940]" />
                 </div>
               </div>
-              <div className="flex gap-3 mt-6">
-                <button onClick={handleSave} className="flex-1 bg-[#d85940] text-white py-2 px-4 rounded-lg hover:bg-[#c04330] transition-colors">{editingTask ? 'Enregistrer' : 'Ajouter'}</button>
-                <button onClick={closeForm} className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors">Annuler</button>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Assigné à</label>
+                <input type="text" value={formData.assigne} onChange={(e) => setFormData({ ...formData, assigne: e.target.value })} placeholder="Laisser vide = visible par tous" className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-[#d85940]/30 focus:border-[#d85940]" />
+                <p className="text-xs text-gray-500 mt-1">💡 Non assigné = tous peuvent la prendre</p>
               </div>
+            </div>
+
+            {/* Actions */}
+            <div className="p-6 border-t border-gray-100 flex gap-3">
+              <button onClick={handleSave} className="flex-1 bg-[#d85940] text-white py-2.5 px-4 rounded-lg hover:bg-[#c04330] transition-colors font-medium">{editingTask ? 'Enregistrer' : 'Ajouter'}</button>
+              <button onClick={closeForm} className="px-6 py-2.5 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors font-medium">Annuler</button>
             </div>
           </div>
         </div>

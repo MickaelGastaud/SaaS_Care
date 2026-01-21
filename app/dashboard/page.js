@@ -3,6 +3,7 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import TachesModule from '@/components/modules/TachesModule';
 import EvenementsModule from '@/components/modules/EvenementsModule';
+import CalendrierModule from '@/components/modules/CalendrierModule';
 
 // ============================================
 // ICÔNES SVG
@@ -46,20 +47,6 @@ const Icons = {
 };
 
 // ============================================
-// CONFIGURATION CALENDRIER
-// ============================================
-const EVENT_TYPE_COLORS = {
-  rdv_medical: 'bg-red-500',
-  intervention_avs: 'bg-green-500',
-  kine: 'bg-blue-500',
-  infirmier: 'bg-purple-500',
-  reunion: 'bg-yellow-500',
-  administratif: 'bg-gray-500',
-  conge: 'bg-orange-500',
-  autre: 'bg-slate-500'
-};
-
-// ============================================
 // COMPOSANT PRINCIPAL
 // ============================================
 export default function DashboardPage() {
@@ -67,8 +54,6 @@ export default function DashboardPage() {
   const [user, setUser] = useState(null);
   const [showNotifications, setShowNotifications] = useState(false);
   const [notifications, setNotifications] = useState([]);
-  const [weekDays, setWeekDays] = useState([]);
-  const [rdvSemaine, setRdvSemaine] = useState([]);
 
   useEffect(() => {
     const userData = localStorage.getItem('user');
@@ -88,41 +73,12 @@ export default function DashboardPage() {
       return diff <= 2;
     });
 
-    // Charger tous les événements calendrier (pour mini calendrier)
+    // Charger les événements calendrier pour les notifications
     const eventsBenef = JSON.parse(localStorage.getItem('events_beneficiaires') || '{}');
     const eventsAvs = JSON.parse(localStorage.getItem('events_avss') || '{}');
     let allCalendarEvents = [];
     Object.values(eventsBenef).forEach(events => { allCalendarEvents = [...allCalendarEvents, ...events]; });
     Object.values(eventsAvs).forEach(events => { allCalendarEvents = [...allCalendarEvents, ...events]; });
-
-    // Générer les jours de la semaine
-    const days = [];
-    const dayNames = ['Dim', 'Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam'];
-    for (let i = 0; i < 7; i++) {
-      const date = new Date(today);
-      date.setDate(today.getDate() + i);
-      const dateStr = date.toISOString().split('T')[0];
-      const rdvCount = allCalendarEvents.filter(e => e.date === dateStr).length;
-      days.push({
-        name: dayNames[date.getDay()],
-        date: date.getDate(),
-        fullDate: dateStr,
-        isToday: i === 0,
-        rdvCount
-      });
-    }
-    setWeekDays(days);
-
-    // RDV de la semaine
-    const weekEvents = allCalendarEvents.filter(e => {
-      const eventDate = new Date(e.date);
-      const diffDays = Math.ceil((eventDate - today) / (1000 * 60 * 60 * 24));
-      return diffDays >= 0 && diffDays < 7;
-    }).sort((a, b) => {
-      if (a.date !== b.date) return a.date.localeCompare(b.date);
-      return (a.heure_debut || '').localeCompare(b.heure_debut || '');
-    });
-    setRdvSemaine(weekEvents.slice(0, 5));
 
     // Notifications
     const notifs = [];
@@ -227,110 +183,15 @@ export default function DashboardPage() {
         {/* Bordure orange distinctive */}
         {/* ============================================ */}
         <section className="bg-white rounded-2xl shadow-sm border-l-4 border-[#d85940] overflow-hidden">
-          <div className="p-4 border-b border-gray-100 bg-[#d85940]/5">
-            <div className="flex items-center space-x-3">
-              <div className="p-2 bg-[#d85940]/10 rounded-lg">
-                <Icons.Taches className="w-5 h-5 text-[#d85940]" />
-              </div>
-              <div>
-                <h2 className="text-lg font-bold text-gray-800">Tâches à faire</h2>
-                <p className="text-sm text-gray-500">Gérez vos tâches prioritaires</p>
-              </div>
-            </div>
-          </div>
-          <div className="p-4">
-            <TachesModule maxRows={6} />
-          </div>
+          <TachesModule showTitle={true} />
         </section>
 
         {/* ============================================ */}
-        {/* SECTION 3 : CALENDRIER (Mini vue semaine) */}
+        {/* SECTION 3 : CALENDRIER / PLANNING */}
         {/* Bordure violette distinctive */}
         {/* ============================================ */}
         <section className="bg-white rounded-2xl shadow-sm border-l-4 border-purple-500 overflow-hidden">
-          <div className="p-4 border-b border-gray-100 bg-purple-50/50">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-3">
-                <div className="p-2 bg-purple-100 rounded-lg">
-                  <Icons.Calendar className="w-5 h-5 text-purple-600" />
-                </div>
-                <div>
-                  <h2 className="text-lg font-bold text-gray-800">Planning de la semaine</h2>
-                  <p className="text-sm text-gray-500">Vos RDV à venir</p>
-                </div>
-              </div>
-              <button
-                onClick={() => router.push('/dashboard/planning')}
-                className="px-4 py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600 transition-colors text-sm font-medium"
-              >
-                Voir le planning complet →
-              </button>
-            </div>
-          </div>
-
-          <div className="p-4">
-            {/* Mini calendrier semaine */}
-            <div className="grid grid-cols-7 gap-2 mb-6">
-              {weekDays.map((day, index) => (
-                <div
-                  key={index}
-                  className={`text-center p-3 rounded-xl cursor-pointer transition-all ${
-                    day.isToday
-                      ? 'bg-purple-500 text-white shadow-lg ring-4 ring-purple-200'
-                      : 'hover:bg-gray-100 bg-gray-50'
-                  }`}
-                  onClick={() => router.push('/dashboard/planning')}
-                >
-                  <p className={`text-xs font-medium mb-1 ${day.isToday ? 'text-white/80' : 'text-gray-500'}`}>
-                    {day.name}
-                  </p>
-                  <p className={`text-xl font-bold ${day.isToday ? 'text-white' : 'text-gray-800'}`}>
-                    {day.date}
-                  </p>
-                  {day.rdvCount > 0 && (
-                    <div className={`mt-2 text-xs font-medium px-2 py-0.5 rounded-full inline-block ${
-                      day.isToday ? 'bg-white/20 text-white' : 'bg-purple-100 text-purple-600'
-                    }`}>
-                      {day.rdvCount} rdv
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
-
-            {/* Liste RDV à venir */}
-            {rdvSemaine.length === 0 ? (
-              <div className="text-center py-6 bg-gray-50 rounded-xl">
-                <Icons.Calendar className="w-10 h-10 text-gray-300 mx-auto mb-2" />
-                <p className="text-gray-500">Aucun RDV cette semaine</p>
-                <button 
-                  onClick={() => router.push('/dashboard/planning')}
-                  className="mt-2 text-sm text-purple-500 hover:text-purple-600 font-medium"
-                >
-                  Planifier un RDV →
-                </button>
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                {rdvSemaine.map((event, index) => (
-                  <div
-                    key={index}
-                    className="flex items-center space-x-3 p-3 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors cursor-pointer border border-gray-100"
-                    onClick={() => router.push('/dashboard/planning')}
-                  >
-                    <div className={`w-1 h-10 rounded-full ${EVENT_TYPE_COLORS[event.type] || 'bg-gray-400'}`}></div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-gray-800 truncate">{event.titre}</p>
-                      <p className="text-xs text-gray-500">
-                        {new Date(event.date).toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric', month: 'short' })}
-                        {event.heure_debut && ` • ${event.heure_debut}`}
-                      </p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
+          <CalendrierModule showTitle={true} />
         </section>
 
         {/* ============================================ */}
