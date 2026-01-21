@@ -5,3 +5,4 @@ export { default as CalendrierModule } from './CalendrierModule';
 export { default as TachesModule } from './TachesModule';
 export { default as ContactsModule } from './ContactsModule';
 export { default as FacturationModule } from './FacturationModule';
+export { default as EvenementsModule } from './EvenementsModule';
